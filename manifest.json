@@ -1,0 +1,13 @@
+{
+	"name": "Label Catalogue",
+	"description": "Turns the record label on any release into a browsable catalogue page, laid out like an artist discography.",
+	"preview": "docs/preview.png",
+	"readme": "README.md",
+	"authors": [
+		{
+			"name": "chstnkh",
+			"url": "https://github.com/chstnkh"
+		}
+	],
+	"tags": ["library", "browse", "metadata"]
+}

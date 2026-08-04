@@ -714,14 +714,38 @@
   };
   var catalogue_page_default = CataloguePage;
 
-  // src/label_link.ts
+  // src/lib.ts
   var ROUTE = "/label-catalog";
-  var HASH_STORAGE_KEY2 = "label-catalog:searchAlbums-hash";
-  var MARKER = "data-label-link";
-  var META_ROW = ".main-entityHeader-metaData";
   function catalogueHref(label) {
     return `${ROUTE}?label=${encodeURIComponent(label)}`;
   }
+  function albumIdFromPath(pathname) {
+    const match = pathname.match(/^\/album\/([A-Za-z0-9]+)/);
+    return match ? match[1] : null;
+  }
+  function findHeaderAnchor(texts) {
+    const separatorIndex = texts.findIndex((text) => text.trim() === "\u2022");
+    if (separatorIndex <= 0)
+      return null;
+    if (separatorIndex + 1 >= texts.length)
+      return null;
+    return { creditIndex: separatorIndex - 1, separatorIndex, valueIndex: separatorIndex + 1 };
+  }
+  function extractSearchAlbumsHash(body) {
+    if (typeof body !== "string" || !body.includes('"searchAlbums"'))
+      return null;
+    try {
+      const hash = JSON.parse(body)?.extensions?.persistedQuery?.sha256Hash;
+      return typeof hash === "string" && hash.length > 0 ? hash : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // src/label_link.ts
+  var HASH_STORAGE_KEY2 = "label-catalog:searchAlbums-hash";
+  var MARKER = "data-label-link";
+  var META_ROW = ".main-entityHeader-metaData";
   function injectStyles() {
     if (document.getElementById("label-link-styles"))
       return;
@@ -767,26 +791,19 @@
       const original = window.fetch;
       window.fetch = function(...args) {
         try {
-          const body = args[1]?.body;
-          if (typeof body === "string" && body.includes('"searchAlbums"')) {
-            const hash = JSON.parse(body)?.extensions?.persistedQuery?.sha256Hash;
-            if (hash && hash !== localStorage.getItem(HASH_STORAGE_KEY2)) {
-              localStorage.setItem(HASH_STORAGE_KEY2, hash);
-            }
+          const hash = extractSearchAlbumsHash(args[1]?.body);
+          if (hash && hash !== localStorage.getItem(HASH_STORAGE_KEY2)) {
+            localStorage.setItem(HASH_STORAGE_KEY2, hash);
           }
         } catch {
         }
         return original.apply(this, args);
       };
     }
-    function albumIdFromPath() {
-      const match = (Spicetify.Platform.History.location?.pathname || "").match(/^\/album\/([A-Za-z0-9]+)/);
-      return match ? match[1] : null;
-    }
     function onNavigate() {
       const token = ++navigationToken;
       document.querySelectorAll(`[${MARKER}]`).forEach((node) => node.remove());
-      const albumId = albumIdFromPath();
+      const albumId = albumIdFromPath(Spicetify.Platform.History.location?.pathname || "");
       if (!albumId)
         return;
       let attempts = 0;
@@ -823,12 +840,12 @@
       if (row.querySelector(`[${MARKER}]`))
         return;
       const children = [...row.children];
-      const separatorIndex = children.findIndex((node) => (node.textContent || "").trim() === "\u2022");
-      const lastCredit = children[separatorIndex - 1];
-      const separator = children[separatorIndex];
-      const valueNode = children[separatorIndex + 1];
-      if (!lastCredit || !separator || !valueNode)
+      const anchor = findHeaderAnchor(children.map((node) => node.textContent || ""));
+      if (!anchor)
         return;
+      const lastCredit = children[anchor.creditIndex];
+      const separator = children[anchor.separatorIndex];
+      const valueNode = children[anchor.valueIndex];
       const ownSeparator = separator.cloneNode(true);
       ownSeparator.setAttribute(MARKER, albumId);
       const holder = valueNode.cloneNode(false);
@@ -913,7 +930,7 @@
   }
   var app_default = main;
 
-  // ../../../../../../../private/var/folders/30/pz7krdq97ydbcz34t0qnymvh0000gn/T/spicetify-creator/index.jsx
+  // spicetify-creator entry
   (async () => {
     await app_default();
   })();
@@ -923,7 +940,7 @@
       var el = document.createElement('style');
       el.id = `labelDcatalog`;
       el.textContent = (String.raw`
-  /* ../../../../../../../private/var/folders/30/pz7krdq97ydbcz34t0qnymvh0000gn/T/tmp-26262-2gseMbsx4BtY/19fcc4bb08f0/catalogue.css */
+  /* catalogue.css */
 .Root__top-container:has(.label-catalog) .main-topBar-background {
   --background-base: var(--spice-main, #121212) !important;
   background-color: var(--spice-main, #121212) !important;

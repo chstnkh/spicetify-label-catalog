@@ -4,6 +4,10 @@
 
 Built on [Spicetify](https://spicetify.app). No separate app, no re-implemented player, no extra login: it runs inside the client you already use.
 
+[![CI](https://github.com/chstnkh/spicetify-label-catalog/actions/workflows/ci.yml/badge.svg)](https://github.com/chstnkh/spicetify-label-catalog/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Spicetify](https://img.shields.io/badge/spicetify-%E2%89%A5%202.44-1ed760.svg)](https://spicetify.app)
+
 ![Release header with a clickable label](docs/release-header.png)
 
 The label sits in the release header between the artist credits and the year, styled like any other metadata link. One click opens the catalogue:

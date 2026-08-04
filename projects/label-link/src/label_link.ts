@@ -7,15 +7,13 @@
  * the catalogue working across Spotify updates without shipping a new build.
  */
 
-export const ROUTE = "/label-catalog";
+import { albumIdFromPath, catalogueHref, extractSearchAlbumsHash, findHeaderAnchor } from "./lib";
+
+export { ROUTE, catalogueHref } from "./lib";
 
 const HASH_STORAGE_KEY = "label-catalog:searchAlbums-hash";
 const MARKER = "data-label-link";
 const META_ROW = ".main-entityHeader-metaData";
-
-export function catalogueHref(label: string): string {
-	return `${ROUTE}?label=${encodeURIComponent(label)}`;
-}
 
 export function injectStyles(): void {
 	if (document.getElementById("label-link-styles")) return;
@@ -70,12 +68,9 @@ export function startLabelLink(): void {
 		const original = window.fetch;
 		window.fetch = function (this: unknown, ...args: Parameters<typeof fetch>) {
 			try {
-				const body = args[1]?.body;
-				if (typeof body === "string" && body.includes('"searchAlbums"')) {
-					const hash = JSON.parse(body)?.extensions?.persistedQuery?.sha256Hash;
-					if (hash && hash !== localStorage.getItem(HASH_STORAGE_KEY)) {
-						localStorage.setItem(HASH_STORAGE_KEY, hash);
-					}
+				const hash = extractSearchAlbumsHash(args[1]?.body);
+				if (hash && hash !== localStorage.getItem(HASH_STORAGE_KEY)) {
+					localStorage.setItem(HASH_STORAGE_KEY, hash);
 				}
 			} catch {
 				/* never let instrumentation break a real request */
@@ -84,17 +79,12 @@ export function startLabelLink(): void {
 		};
 	}
 
-	function albumIdFromPath(): string | null {
-		const match = (Spicetify.Platform.History.location?.pathname || "").match(/^\/album\/([A-Za-z0-9]+)/);
-		return match ? match[1] : null;
-	}
-
 	function onNavigate(): void {
 		const token = ++navigationToken;
 		// Anything already on screen belongs to the page we just left.
 		document.querySelectorAll(`[${MARKER}]`).forEach((node) => node.remove());
 
-		const albumId = albumIdFromPath();
+		const albumId = albumIdFromPath(Spicetify.Platform.History.location?.pathname || "");
 		if (!albumId) return;
 
 		// The header renders asynchronously; poll briefly rather than racing it.
@@ -135,19 +125,13 @@ export function startLabelLink(): void {
 
 		const children = [...row.children] as HTMLElement[];
 
-		// The row reads: <credits> • <year> • <duration>. A release can credit
-		// several artists, each its own node with Spotify's own separators between
-		// them, so the label belongs after the whole credit block rather than
-		// wedged between the first two names.
-		//
-		// Anchor on the first "•" instead of on artist links: compilations are
-		// credited to an unlinked "Various Artists", and keying off
-		// `a[href^="/artist/"]` skipped those releases entirely.
-		const separatorIndex = children.findIndex((node) => (node.textContent || "").trim() === "•");
-		const lastCredit = children[separatorIndex - 1];
-		const separator = children[separatorIndex];
-		const valueNode = children[separatorIndex + 1]; // the year
-		if (!lastCredit || !separator || !valueNode) return;
+		// Positional anchor — see findHeaderAnchor for why this must not depend
+		// on artist links.
+		const anchor = findHeaderAnchor(children.map((node) => node.textContent || ""));
+		if (!anchor) return;
+		const lastCredit = children[anchor.creditIndex];
+		const separator = children[anchor.separatorIndex];
+		const valueNode = children[anchor.valueIndex]; // the year
 
 		// Cloning live nodes inherits Spotify's typography classes, which are
 		// generated per build and would rot if hardcoded. The label is cloned from

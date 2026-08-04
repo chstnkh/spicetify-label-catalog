@@ -131,4 +131,7 @@ Hard-won facts encoded in those scripts:
   `label-catalog:album-cache:v2`.
 - **The built extension bundle is committed** (`projects/label-link/dist/label-catalog.js`).
   Marketplace installs extensions by downloading that file straight from the
-  repository, so it has to be in git and rebuilt before release.
+  repository, so it has to be in git and rebuilt before release. The build pipes
+  through `scripts/strip-build-paths.mjs`, which normalises the temp-dir paths
+  esbuild embeds as comments — that makes builds byte-reproducible, and CI fails
+  if the committed bundle is stale.

@@ -4,7 +4,7 @@
 	"private": true,
 	"license": "MIT",
 	"scripts": {
-		"build": "spicetify-creator --out=dist",
+		"build": "spicetify-creator --out=dist && node ../../scripts/strip-build-paths.mjs dist/label-catalog.js",
 		"watch": "spicetify-creator --watch --out=dist"
 	}
 }

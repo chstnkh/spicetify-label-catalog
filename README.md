@@ -29,23 +29,49 @@ Spotify prints the label on every release — as dead text in the fine print. Th
 
 ## Install
 
-Requirements: [Spotify for desktop](https://www.spotify.com/download/) (not the App Store build), [Spicetify](https://spicetify.app/docs/getting-started) ≥ 2.44, Node.js ≥ 18.
+### From Spicetify Marketplace
+
+Open **Marketplace → Extensions**, search for *Label Catalogue*, install. That is
+the whole thing — it ships as a single self-contained extension.
+
+### Manually
+
+Requirements: [Spotify for desktop](https://www.spotify.com/download/) (not the App Store build), [Spicetify](https://spicetify.app/docs/getting-started) ≥ 2.44.
 
 ```bash
-git clone https://github.com/chstnkh/spicetify-label-catalog.git
-cd spicetify-label-catalog
-npm install
-npm run build
+curl -o ~/.config/spicetify/Extensions/label-catalog.js \
+  https://raw.githubusercontent.com/chstnkh/spicetify-label-catalog/main/projects/label-link/dist/label-catalog.js
 
-ln -s "$(pwd)/projects/label-catalog/dist" ~/.config/spicetify/CustomApps/label-catalog
-ln -s "$(pwd)/projects/label-link/label-link.js" ~/.config/spicetify/Extensions/label-link.js
-
-spicetify config custom_apps label-catalog
-spicetify config extensions label-link.js
+spicetify config extensions label-catalog.js
 spicetify apply
 ```
 
 Open any album — the label in the header is now a link.
+
+<details>
+<summary>Optional: install as a custom app instead</summary>
+
+The extension renders the catalogue by mounting into the main view on
+`/label-catalog`. Spicetify has no runtime API for registering routes, so this is
+how an extension can own a real URL with working back/forward navigation.
+
+If you would rather have the route registered natively, the repository also
+builds a custom app. Install both — the extension detects the custom app and
+stands down, leaving the route to it:
+
+```bash
+git clone https://github.com/chstnkh/spicetify-label-catalog.git
+cd spicetify-label-catalog && npm install && npm run build
+
+ln -s "$(pwd)/projects/label-catalog/dist" ~/.config/spicetify/CustomApps/label-catalog
+ln -s "$(pwd)/projects/label-link/dist/label-catalog.js" ~/.config/spicetify/Extensions/label-catalog.js
+
+spicetify config custom_apps label-catalog
+spicetify config extensions label-catalog.js
+spicetify apply
+```
+
+</details>
 
 ## How it works
 
@@ -61,14 +87,17 @@ The page renders incrementally while all of this happens, and reports honestly: 
 
 ## Caveats
 
-- Verified on Spotify **1.2.94.583** with Spicetify **2.44.0** (macOS). Spotify updates occasionally break Spicetify custom apps in general — if the page disappears after an update, wait for a Spicetify release and re-apply.
+- Verified on Spotify **1.2.94.583** with Spicetify **2.44.0** (macOS). Spotify updates occasionally break Spicetify in general — if the link or page disappears after an update, wait for a Spicetify release and re-apply.
 - Play counts come from the client's internal API (the same numbers the album page shows). They are not available from the public Web API.
 - The `label:` search filter is undocumented and could change on Spotify's side.
 - Roster expansion is capped at 40 artists per label as a request-volume guard; enormous rosters may still be incomplete.
 
 ## Development
 
-Tests (`npm test`), a live smoke check over the Chrome DevTools Protocol, a sandboxed dev workflow that never touches your daily Spotify install, and the collected list of traps (undocumented components, persisted-query hashes, macOS single-instance behaviour) are documented in [DEVELOPMENT.md](DEVELOPMENT.md).
+Unit tests (`npm test`), live checks driven over the Chrome DevTools Protocol, a
+sandboxed dev workflow that never touches your daily Spotify install, and the
+collected list of traps (undocumented components, persisted-query hashes, macOS
+single-instance behaviour) are documented in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## License
 

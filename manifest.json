@@ -2,6 +2,7 @@
 	"name": "Label Catalogue",
 	"description": "Turns the record label on any release into a browsable catalogue page, laid out like an artist discography.",
 	"preview": "docs/preview.png",
+	"main": "projects/label-link/dist/label-catalog.js",
 	"readme": "README.md",
 	"authors": [
 		{

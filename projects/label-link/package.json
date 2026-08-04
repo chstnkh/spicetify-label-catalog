@@ -1,0 +1,10 @@
+{
+	"name": "label-link",
+	"version": "0.1.0",
+	"private": true,
+	"license": "MIT",
+	"scripts": {
+		"build": "spicetify-creator --out=dist",
+		"watch": "spicetify-creator --watch --out=dist"
+	}
+}

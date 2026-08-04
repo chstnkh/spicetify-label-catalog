@@ -1,9 +1,16 @@
 # Local sandbox copy of Spotify.app and pristine-reference checksums
 .sandbox/
 
-# Dependencies and build output
+# Dependencies
 node_modules/
+
+# Build output. The extension bundle is an exception: Spicetify Marketplace
+# installs extensions by downloading the built file straight from the repo,
+# so it has to be committed.
 projects/*/dist/
+!projects/label-link/dist/
+projects/label-link/dist/*
+!projects/label-link/dist/label-catalog.js
 
 # Local tool state
 .claude/

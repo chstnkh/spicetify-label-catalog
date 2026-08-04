@@ -10,12 +10,13 @@
 		"url": "https://github.com/chstnkh/spicetify-label-catalog.git"
 	},
 	"workspaces": [
-		"projects/label-catalog"
+		"projects/label-catalog",
+		"projects/label-link"
 	],
 	"scripts": {
-		"build": "npm run build --workspace=label-catalog",
+		"build": "npm run build --workspace=label-catalog && npm run build --workspace=label-link",
 		"watch": "npm run watch --workspace=label-catalog",
-		"typecheck": "tsc --noEmit --project projects/label-catalog",
+		"typecheck": "tsc --noEmit --project projects/label-catalog && tsc --noEmit --project projects/label-link",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"deploy": "npm run build && spicetify apply -n",

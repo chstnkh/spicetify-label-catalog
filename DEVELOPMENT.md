@@ -3,15 +3,37 @@
 ## Layout
 
 ```
-projects/label-catalog/   custom app — the catalogue page (TypeScript + React, built with spicetify-creator)
-projects/label-link/      extension — the header link, plus a few CSS repairs and the hash capture
+projects/shared/          the catalogue itself: data layer, UI components, styles, tests
+projects/label-link/      extension — header link + route takeover. The shipped artifact.
+projects/label-catalog/   custom app — the same catalogue on a natively registered route (optional)
 scripts/                  dev tooling: sandbox launcher, CDP bridge, live checks, icon generator
 ```
+
+Both entry points render the same `CataloguePage` from `projects/shared`. The
+extension is what ships to Marketplace; the custom app exists because a natively
+registered route is tidier than a takeover, and the two coexist — the extension
+checks whether the container is already occupied and stands down.
+
+### Why the extension can render a page at all
+
+Spicetify has no runtime API for registering routes: custom-app routes are
+written into `xpui` by the CLI at apply time. But an unknown path renders an
+*empty* main view rather than an error page, and the client's router does not
+reclaim that container. The extension mounts there, which keeps the real URL and
+the back/forward buttons.
+
+Two rules make that safe, both learned the hard way:
+
+- **Append, never replace.** Tearing React-managed children out of the container
+  corrupts Spotify's reconciliation for the rest of the session; later pages
+  render into a fresh container and lose their header markup entirely.
+- **Clean up on navigation.** Spotify leaves the injected node in place when you
+  navigate away from an unknown route, so the extension unmounts it itself.
 
 ## Everyday loop
 
 ```bash
-npm run deploy            # build the custom app + spicetify apply -n
+npm run deploy            # build both entry points + spicetify apply -n
 npm run stop && npm start # restart the client to pick the change up
 ```
 
@@ -40,10 +62,17 @@ Protocol:
 
 ```bash
 DEBUG_PORT=9222 npm start
-node scripts/cdp-eval.mjs scripts/checks/smoke.js          # release → label link → catalogue
-node scripts/cdp-eval.mjs scripts/checks/active-release.js # sticky header names the release under it
-node scripts/cdp-eval.mjs scripts/checks/capture-error.js  # captures whatever the app throws on mount
+node scripts/cdp-eval.mjs scripts/checks/smoke.js           # release → label link → catalogue
+node scripts/cdp-eval.mjs scripts/checks/header-variants.js # link lands right in every header shape
+node scripts/cdp-eval.mjs scripts/checks/route-lifecycle.js # takeover mounts, cleans up, remounts
+node scripts/cdp-eval.mjs scripts/checks/active-release.js  # sticky header names the release under it
+node scripts/cdp-eval.mjs scripts/checks/capture-error.js   # captures whatever the app throws on mount
 ```
+
+`header-variants.js` exists because the release header comes in several shapes.
+Anchoring the label on `a[href^="/artist/"]` looked right until compilations —
+credited to an unlinked "Various Artists" — silently stopped getting the link.
+The anchor is now the last node before the first separator.
 
 `scripts/cdp-shot.mjs` takes screenshots of the renderer (optionally hovering an
 element first — CSS `:hover` cannot be forced from page JS). `SHOT_WIDTH` /
@@ -80,12 +109,12 @@ Hard-won facts encoded in those scripts:
 
 - **`Spicetify.ReactComponent` is bigger than its typings.** `Cards`, `Chip` and
   `Dropdown` exist at runtime but are undeclared; access goes through one typed
-  shim (`src/types/runtime.ts`). Conversely `TextComponent` *is* declared but
+  shim (`projects/shared/src/types/runtime.ts`). Conversely `TextComponent` *is* declared but
   throws React error #31 on 1.2.94 with any props — plain markup styled from
-  `app.scss` is used instead.
+  `catalogue.scss` is used instead.
 - **`searchAlbums` is addressed by a persisted-query SHA-256 hash** that changes
   with Spotify builds. The extension watches the client's own search traffic and
-  stores the current hash in `localStorage`; `pathfinder.ts` carries a baked-in
+  stores the current hash in `localStorage`; `shared/src/api/pathfinder.ts` carries a baked-in
   fallback captured on 1.2.94.583. Nothing to do on update — it heals itself.
 - **A page reload is not a restart.** After `location.reload()`,
   `Spicetify.GraphQL` exists while `GraphQL.Request` is still unbound. The
@@ -100,3 +129,6 @@ Hard-won facts encoded in those scripts:
   previous build will crash the first render.
 - **Local-storage keys** in use: `label-catalog:searchAlbums-hash`,
   `label-catalog:album-cache:v2`.
+- **The built extension bundle is committed** (`projects/label-link/dist/label-catalog.js`).
+  Marketplace installs extensions by downloading that file straight from the
+  repository, so it has to be in git and rebuilt before release.

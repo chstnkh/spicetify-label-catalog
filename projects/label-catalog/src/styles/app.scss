@@ -1,0 +1,353 @@
+// Spotify tints the top bar with the extracted cover colour of whatever entity
+// page you were last on, and fades it in as you scroll. Nothing resets it for a
+// custom-app route, so the catalogue inherited a stray coloured band — red after
+// one album, violet after another. Scope it back to the page background while our
+// route is mounted.
+// The tint arrives as an inline `--background-base` on the bar itself, so the
+// override has to replace that variable — painting `background-color` with
+// `var(--background-base)` just re-reads the stray colour.
+.Root__top-container:has(.label-catalog) .main-topBar-background {
+	--background-base: var(--spice-main, #121212) !important;
+	background-color: var(--spice-main, #121212) !important;
+}
+
+// Layout mirrors the artist page's expanded discography so the two read as one system.
+.label-catalog {
+	padding: 0 32px 64px;
+
+	&--empty {
+		padding-top: 64px;
+		opacity: 0.7;
+	}
+
+	&__header {
+		padding: 24px 0 8px;
+	}
+
+	// Spicetify's TextComponent is unusable on 1.2.94 (React error #31), so the
+	// subdued-text treatment is reproduced here against Spotify's own variables.
+	&__eyebrow,
+	&__count {
+		color: var(--text-subdued, #a7a7a7);
+		font-size: 0.875rem;
+		line-height: 1.4;
+	}
+
+	&__title {
+		font-size: 3rem;
+		font-weight: 900;
+		letter-spacing: -0.04em;
+		margin: 4px 0 8px;
+	}
+
+	&__progress {
+		opacity: 0.75;
+	}
+
+	// Pins the release bar and the filters while releases scroll under them, the
+	// way the artist discography keeps its own controls in reach.
+	&__sticky {
+		position: sticky;
+		// The scroll container starts level with Spotify's 64px top bar, so
+		// sticking at 0 parks the row underneath it.
+		top: 64px;
+		z-index: 2;
+		background: #121212;
+	}
+
+	&__nowbar {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		padding: 8px 0;
+	}
+
+	&__nowbar-play {
+		display: grid;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		flex-shrink: 0;
+		border: 0;
+		border-radius: 50%;
+		background: var(--spice-button, #1ed760);
+		color: #000;
+		cursor: pointer;
+		transition: transform 0.1s ease;
+
+		&:hover {
+			transform: scale(1.05);
+		}
+	}
+
+	&__nowbar-title {
+		font-size: 1.5rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__sticky-name {
+		font-size: 1.5rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		margin-right: 8px;
+		flex-shrink: 0;
+	}
+
+	&__controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		// Never wrap: a wrapped second line stopped being covered by the sticky
+		// backdrop and the release artwork scrolled through it. The chip group
+		// scrolls sideways instead, which is also what the native discography does.
+		flex-wrap: nowrap;
+		padding: 12px 0 20px;
+	}
+
+	&__chips {
+		display: flex;
+		gap: 8px;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
+	&__sort {
+		flex-shrink: 0;
+		background: transparent;
+		color: var(--text-subdued, #a7a7a7);
+		border: 0;
+		font-size: 0.875rem;
+		cursor: pointer;
+
+		option {
+			background: var(--spice-card, #181818);
+			color: var(--spice-text, #fff);
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 40px;
+	}
+
+	&__notice,
+	&__error {
+		padding: 12px 16px;
+		border-radius: 8px;
+		margin-bottom: 16px;
+		font-size: 0.875rem;
+	}
+
+	&__notice {
+		background: rgba(255, 255, 255, 0.07);
+	}
+
+	&__error {
+		background: rgba(226, 33, 52, 0.15);
+	}
+}
+
+.release-row {
+	&__head {
+		display: flex;
+		gap: 24px;
+		align-items: flex-start;
+		margin-bottom: 16px;
+	}
+
+	&__cover {
+		width: 148px;
+		height: 148px;
+		object-fit: cover;
+		border-radius: 6px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	&__info {
+		min-width: 0;
+		padding-top: 8px;
+	}
+
+	&__title {
+		font-size: 2rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		margin: 0 0 4px;
+		cursor: pointer;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	&__meta {
+		color: var(--text-subdued, #a7a7a7);
+		font-size: 0.875rem;
+		margin-bottom: 16px;
+	}
+
+	&__play {
+		display: grid;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		border: 0;
+		border-radius: 50%;
+		background: var(--spice-button, #1ed760);
+		color: #000;
+		cursor: pointer;
+		transition: transform 0.1s ease;
+
+		&:hover {
+			transform: scale(1.05);
+		}
+	}
+
+	&__tracks {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+
+		thead th {
+			color: var(--text-subdued, #a7a7a7);
+			font-weight: 400;
+			text-align: left;
+			padding: 4px 8px 8px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		tbody tr {
+			cursor: default;
+
+			&:hover {
+				background: rgba(255, 255, 255, 0.05);
+			}
+		}
+
+		tbody td {
+			padding: 8px;
+			vertical-align: middle;
+		}
+	}
+
+	&__col-num {
+		width: 40px;
+		color: var(--text-subdued, #a7a7a7);
+		text-align: center;
+		position: relative;
+	}
+
+	// The number and the play control occupy the same slot, swapping on hover —
+	// same affordance as the artist discography tracklist.
+	&__track-play {
+		position: absolute;
+		inset: 0;
+		display: none;
+		place-items: center;
+		width: 100%;
+		border: 0;
+		background: none;
+		color: var(--spice-text, #fff);
+		cursor: pointer;
+	}
+
+	&__col-menu {
+		width: 40px;
+		text-align: center;
+	}
+
+	&__track-menu {
+		display: none;
+		border: 0;
+		background: none;
+		color: var(--text-subdued, #a7a7a7);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--spice-text, #fff);
+		}
+	}
+
+	tbody tr:hover {
+		.release-row__num {
+			visibility: hidden;
+		}
+
+		.release-row__track-play,
+		.release-row__track-menu {
+			display: grid;
+			place-items: center;
+			margin: 0 auto;
+		}
+	}
+
+	&__col-plays {
+		width: 140px;
+		text-align: right;
+		color: var(--text-subdued, #a7a7a7);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__col-time {
+		width: 70px;
+		text-align: right;
+		color: var(--text-subdued, #a7a7a7);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__track-name {
+		color: var(--spice-text, #fff);
+	}
+
+	&__track-artist {
+		color: var(--text-subdued, #a7a7a7);
+		font-size: 0.8125rem;
+	}
+
+	&__credit {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			color: var(--spice-text, #fff);
+			text-decoration: underline;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+	}
+
+	&__action {
+		border: 0;
+		background: none;
+		color: var(--text-subdued, #a7a7a7);
+		cursor: pointer;
+		display: grid;
+		place-items: center;
+
+		&:hover {
+			color: var(--spice-text, #fff);
+			transform: scale(1.04);
+		}
+
+		&--on {
+			color: var(--spice-button, #1ed760);
+		}
+	}
+}

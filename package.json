@@ -1,0 +1,28 @@
+{
+	"name": "spicetify-label-catalog",
+	"version": "0.1.0",
+	"description": "Record-label pages for the Spotify desktop client: click the label on any release and browse its full catalogue",
+	"private": true,
+	"license": "MIT",
+	"author": "Danila (https://github.com/chstnkh)",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/chstnkh/spicetify-label-catalog.git"
+	},
+	"workspaces": [
+		"projects/label-catalog"
+	],
+	"scripts": {
+		"build": "npm run build --workspace=label-catalog",
+		"watch": "npm run watch --workspace=label-catalog",
+		"typecheck": "tsc --noEmit --project projects/label-catalog",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"deploy": "npm run build && spicetify apply -n",
+		"start": "scripts/start.sh",
+		"stop": "scripts/stop.sh"
+	},
+	"devDependencies": {
+		"vitest": "^4.1.10"
+	}
+}

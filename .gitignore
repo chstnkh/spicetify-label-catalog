@@ -1,0 +1,13 @@
+# Local sandbox copy of Spotify.app and pristine-reference checksums
+.sandbox/
+
+# Dependencies and build output
+node_modules/
+projects/*/dist/
+
+# Local tool state
+.claude/
+
+# OS noise
+.DS_Store
+*.log

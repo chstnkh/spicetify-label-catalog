@@ -19,9 +19,13 @@ STOCK_PROC="Applications/Spotify.app/Contents/MacOS/Spotify"
 PATCHED_PROC="Spotify Label.app/Contents/MacOS/Spotify"
 DEBUG_PORT="${DEBUG_PORT:-}"
 
-if [[ ! -d "$APP" ]]; then
-  echo "$APP is missing — see README." >&2
-  exit 1
+# Spotify's own updater replaces the running bundle in place, which discards the
+# patch. A bundle that still carries xpui.spa (rather than the unpacked xpui/
+# directory Spicetify leaves behind) has been through exactly that — repair it
+# before launching, so the feature is never silently missing.
+if [[ ! -d "$APP" || -f "$APP/Contents/Resources/Apps/xpui.spa" ]]; then
+  echo "Spotify Label is missing or unpatched — repairing first…"
+  "$(dirname "$0")/repair.sh"
 fi
 
 if pgrep -f "$STOCK_PROC" > /dev/null; then

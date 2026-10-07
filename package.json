@@ -21,7 +21,8 @@
 		"test:watch": "vitest",
 		"deploy": "npm run build && spicetify apply -n",
 		"start": "scripts/start.sh",
-		"stop": "scripts/stop.sh"
+		"stop": "scripts/stop.sh",
+		"repair": "scripts/repair.sh"
 	},
 	"devDependencies": {
 		"vitest": "^4.1.10"
